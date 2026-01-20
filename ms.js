@@ -1,46 +1,22 @@
-// api/save-user-message.js
-const fs = require('fs');
-const path = require('path');
+import { MongoClient } from 'mongodb';
 
-module.exports = async(req, res) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
+const uri = process.env.MONGODB_URI;
+const client = new MongoClient(uri);
 
-    if (req.method === 'OPTIONS') return res.status(200).end();
-
+export default async function handler(req, res) {
     if (req.method === 'POST') {
         try {
-            const messagesPath = path.join(process.cwd(), 'conversation.json');
+            await client.connect();
+            const database = client.db('telegram_bot');
+            const messages = database.collection('messages');
 
-            let messages = [];
-            if (fs.existsSync(messagesPath)) {
-                messages = JSON.parse(fs.readFileSync(messagesPath, 'utf8'));
-            }
+            await messages.insertOne(req.body);
 
-            const newMessage = {
-                id: Date.now().toString(),
-                ...req.body,
-                timestamp: new Date().toISOString()
-            };
-
-            messages.push(newMessage);
-
-            // Faqat oxirgi 50 ta xabar
-            if (messages.length > 50) {
-                messages = messages.slice(-50);
-            }
-
-            fs.writeFileSync(messagesPath, JSON.stringify(messages, null, 2));
-
-            console.log('✅ Foydalanuvchi xabari saqlandi:', newMessage.sender_name);
-
-            return res.json({ success: true, message: 'Foydalanuvchi xabari saqlandi' });
-
-        } catch (error) {
-            console.error('❌ Xatolik:', error);
-            return res.status(500).json({ success: false, error: error.message });
+            res.status(200).json({ success: true });
+        } finally {
+            await client.close();
         }
+    } else {
+        res.status(405).json({ error: 'Method not allowed' });
     }
-
-    return res.status(405).json({ success: false, error: 'Method not allowed' });
-};
+}
