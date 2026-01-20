@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="uz">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 Bot va Foydalanuvchi Xabarlari</title>
+    <style>
+         :root {
+            --user-color: #0088cc;
+            --bot-color: #25d366;
+            --bg-color: #f5f5f5;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--text-color);
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            min-height: 90vh;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--user-color), #006699);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .status-bar {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 12px 20px;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+        
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #4CAF50;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn-primary {
+            background: var(--user-color);
+            color: white;
+        }
+        
+        .btn-success {
+            background: var(--bot-color);
+            color: white;
+        }
+        
+        .messages-container {
+            padding: 25px;
+            min-height: 400px;
+        }
+        
+        .messages-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .messages-title {
+            font-size: 22px;
+            color: var(--user-color);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .messages-count {
+            background: var(--user-color);
+            color: white;
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .conversation {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        
+        .message-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .user-message {
+            align-self: flex-end;
+            max-width: 80%;
+        }
+        
+        .bot-message {
+            align-self: flex-start;
+            max-width: 80%;
+        }
+        
+        .message-bubble {
+            padding: 15px 20px;
+            border-radius: 20px;
+            position: relative;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .user-bubble {
+            background: var(--user-color);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+        
+        .bot-bubble {
+            background: #f0f0f0;
+            color: var(--text-color);
+            border-bottom-left-radius: 5px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .message-sender {
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        
+        .user-sender {
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .bot-sender {
+            color: var(--bot-color);
+        }
+        
+        .message-content {
+            line-height: 1.5;
+            font-size: 15px;
+        }
+        
+        .message-time {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 8px;
+            text-align: right;
+        }
+        
+        .message-icon {
+            position: absolute;
+            top: -10px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+        
+        .user-icon {
+            right: -5px;
+            background: var(--user-color);
+            color: white;
+        }
+        
+        .bot-icon {
+            left: -5px;
+            background: var(--bot-color);
+            color: white;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+        
+        .empty-state i {
+            font-size: 80px;
+            opacity: 0.3;
+            margin-bottom: 20px;
+        }
+        
+        .empty-state h3 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--user-color);
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--user-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+        
+        .alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 10px;
+            background: white;
+            box-shadow: var(--shadow);
+            z-index: 1000;
+            animation: slideInRight 0.3s ease;
+            max-width: 400px;
+        }
+        
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                border-radius: 15px;
+            }
+            .controls {
+                grid-template-columns: 1fr;
+            }
+            .user-message,
+            .bot-message {
+                max-width: 90%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="alertContainer"></div>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>
+                <span>💬</span> Bot va Foydalanuvchi Xabarlari
+            </h1>
+            <p>Foydalanuvchi xabarlari va bot javoblari real vaqtda</p>
+
+            <div class="status-bar">
+                <div class="status-indicator"></div>
+                <span id="statusText">Xabarlar yuklanmoqda...</span>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <button class="btn btn-primary" onclick="loadMessages()">
+                <span>🔄</span>
+                Xabarlarni Yuklash
+            </button>
+            <button class="btn btn-success" onclick="startAutoRefresh()">
+                <span>⚡</span>
+                Avtoyangilash
+            </button>
+            <button class="btn" onclick="showInstructions()" style="background: #ff9800; color: white;">
+                <span>📋</span>
+                Qo'llanma
+            </button>
+        </div>
+
+        <!-- Messages Container -->
+        <div class="messages-container">
+            <div class="messages-header">
+                <h2 class="messages-title">
+                    <span>💭</span> Suhbat
+                </h2>
+                <div class="messages-count">
+                    <span id="messageCount">0</span> ta
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loadingState" class="loading">
+                <div class="spinner"></div>
+                <p>Xabarlar yuklanmoqda...</p>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <span>💬</span>
+                <h3>Hozircha xabarlar yo'q</h3>
+                <p>Botga xabar yozing va u javob beradi. Ikkala xabar ham shu yerda ko'rinadi</p>
+            </div>
+
+            <!-- Conversation -->
+            <div class="conversation" id="conversation"></div>
+        </div>
+    </div>
+
+    <script>
+        // ====== KONFIGURATSIYA ======
+        const API_BASE_URL = "https://hydroline.vercel.app";
+        const GET_CONVERSATION_URL = `${API_BASE_URL}/api/get-conversation`;
+
+        // ====== O'ZGARUVCHILAR ======
+        let messages = [];
+        let autoRefreshInterval = null;
+
+        // ====== FUNKSIYALAR ======
+
+        function showAlert(message, type = 'info') {
+            const container = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = 'alert';
+
+            const colors = {
+                info: '#2196F3',
+                success: '#4CAF50',
+                error: '#f44336',
+                warning: '#ff9800'
+            };
+
+            alert.style.borderLeft = `4px solid ${colors[type] || colors.info}`;
+            alert.innerHTML = message;
+
+            container.appendChild(alert);
+
+            setTimeout(() => alert.remove(), 5000);
+        }
+
+        function updateStatus(text) {
+            document.getElementById('statusText').textContent = text;
+        }
+
+        function formatTime(timestamp) {
+            if (!timestamp) return '';
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString('uz-UZ', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        async function loadMessages() {
+            updateStatus('Xabarlar yuklanmoqda...');
+            document.getElementById('loadingState').style.display = 'block';
+            document.getElementById('emptyState').style.display = 'none';
+
+            try {
+                const response = await fetch(GET_CONVERSATION_URL);
+
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const data = await response.json();
+                messages = data.conversation || [];
+
+                if (messages.length === 0) {
+                    document.getElementById('emptyState').style.display = 'block';
+                    showAlert('💬 Botga xabar yozing va u javob beradi!', 'info');
+                } else {
+                    showAlert(`✅ ${messages.length} ta xabar yuklandi`, 'success');
+                }
+
+                displayConversation();
+                updateStatus(`✅ ${messages.length} ta xabar`);
+
+            } catch (error) {
+                console.error('❌ Xatolik:', error);
+                showAlert('❌ Xabarlarni yuklab bo\'lmadi', 'error');
+                updateStatus('❌ Xatolik');
+            } finally {
+                document.getElementById('loadingState').style.display = 'none';
+            }
+        }
+
+        function displayConversation() {
+            const container = document.getElementById('conversation');
+            const emptyState = document.getElementById('emptyState');
+
+            if (messages.length === 0) {
+                emptyState.style.display = 'block';
+                container.innerHTML = '';
+                document.getElementById('messageCount').textContent = '0';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+
+            let html = '';
+
+            // Xabarlarni guruhlash (user + bot juftligi)
+            for (let i = 0; i < messages.length; i++) {
+                const msg = messages[i];
+
+                if (msg.sender === 'user') {
+                    html += `
+                        <div class="message-group">
+                            <!-- Foydalanuvchi xabari -->
+                            <div class="user-message">
+                                <div class="message-bubble user-bubble">
+                                    <div class="message-icon user-icon">👤</div>
+                                    <div class="message-sender user-sender">${msg.sender_name}</div>
+                                    <div class="message-content">${escapeHtml(msg.content?.text || '')}</div>
+                                    <div class="message-time">${formatTime(msg.timestamp)}</div>
+                                </div>
+                            </div>
+                    `;
+
+                    // Keyingi xabar bot javobi bo'lsa
+                    if (i + 1 < messages.length && messages[i + 1].sender === 'bot') {
+                        const botMsg = messages[i + 1];
+                        html += `
+                            <!-- Bot javobi -->
+                            <div class="bot-message">
+                                <div class="message-bubble bot-bubble">
+                                    <div class="message-icon bot-icon">🤖</div>
+                                    <div class="message-sender bot-sender">${botMsg.sender_name}</div>
+                                    <div class="message-content">${escapeHtml(botMsg.content?.text || '')}</div>
+                                    <div class="message-time">${formatTime(botMsg.timestamp)}</div>
+                                </div>
+                            </div>
+                        `;
+                        i++; // Bot xabarini ham hisobga olish
+                    }
+
+                    html += `</div>`;
+                }
+            }
+
+            container.innerHTML = html;
+            document.getElementById('messageCount').textContent = messages.length;
+
+            // Eng pastga scroll qilish
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function startAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+                showAlert('⏸️ Avtoyangilash to\'xtatildi', 'info');
+            } else {
+                autoRefreshInterval = setInterval(loadMessages, 3000);
+                showAlert('⚡ Avtoyangilash yoqildi (3 soniya)', 'success');
+            }
+        }
+
+        function showInstructions() {
+            const instructions = `
+                <strong>📋 QO'LLANMA</strong><br><br>
+                <strong>1. Botga xabar yozing:</strong><br>
+                - "Salom"<br>
+                - "Qandaysiz?"<br>
+                - "Rasm yuborish mumkinmi?"<br><br>
+                
+                <strong>2. Bot javob beradi</strong><br><br>
+                
+                <strong>3. Veb sahifada ko'ring:</strong><br>
+                - 👤 Sizning xabaringiz (ko'k)<br>
+                - 🤖 Bot javobi (yashil)<br><br>
+                
+                <strong>4. Avtoyangilash:</strong><br>
+                - Har 3 soniyada yangilanadi
+            `;
+            showAlert(instructions, 'info', 10000);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ====== DASTLABKI ISHGA TUSHIRISH ======
+        document.addEventListener('DOMContentLoaded', () => {
+            updateStatus('Bot suhbatini kutmoqda...');
+
+            // Avtomatik yuklash
+            setTimeout(() => {
+                loadMessages();
+                startAutoRefresh();
+            }, 1000);
+        });
+    </script>
+</body>
+
+</html>
