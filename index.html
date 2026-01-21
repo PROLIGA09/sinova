@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TELEGRAM BOT CONTROL v2.0</title>
+    <title>LIVE Telegram Bot Monitor</title>
     <style>
         * {
             margin: 0;
@@ -13,71 +13,42 @@
         }
         
         body {
-            font-family: 'Courier New', monospace;
-            background: #000;
-            color: #00ff00;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #000000 100%);
+            color: #fff;
             min-height: 100vh;
-            overflow-x: hidden;
             position: relative;
+            overflow-x: hidden;
         }
-        /* Matrix background effect */
+        /* Live notification alert */
         
-        .matrix-bg {
+        .live-alert {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #000;
-            opacity: 0.1;
-            z-index: -1;
-        }
-        
-        .matrix-char {
-            position: absolute;
-            color: #00ff00;
-            font-size: 14px;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(90deg, #ff0000, #ff5500);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
             font-weight: bold;
-            opacity: 0;
-            animation: matrixFall linear infinite;
-        }
-        
-        @keyframes matrixFall {
-            0% {
-                transform: translateY(-100px);
-                opacity: 0;
-            }
-            10% {
-                opacity: 1;
-            }
-            90% {
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(100vh);
-                opacity: 0;
-            }
-        }
-        
-        .scan-line {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background: linear-gradient(to right, transparent, #00ff00, transparent);
-            opacity: 0.3;
-            animation: scan 2s linear infinite;
             z-index: 1000;
-            pointer-events: none;
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
+            display: none;
         }
         
-        @keyframes scan {
+        @keyframes pulse {
             0% {
-                top: 0%;
+                transform: scale(1);
+                box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 0 40px rgba(255, 0, 0, 0.8);
             }
             100% {
-                top: 100%;
+                transform: scale(1);
+                box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
             }
         }
         
@@ -85,15 +56,15 @@
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
-            position: relative;
-            z-index: 1;
         }
         
         .header {
             text-align: center;
             padding: 30px 0;
-            border-bottom: 2px solid #00ff00;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 20px;
             margin-bottom: 30px;
+            border: 2px solid #00ff00;
             position: relative;
             overflow: hidden;
         }
@@ -105,11 +76,11 @@
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(0, 255, 0, 0.1), transparent);
-            animation: headerGlow 3s infinite;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 0, 0.2), transparent);
+            animation: shine 3s infinite;
         }
         
-        @keyframes headerGlow {
+        @keyframes shine {
             0% {
                 left: -100%;
             }
@@ -120,267 +91,274 @@
         
         .header h1 {
             font-size: 3em;
-            text-transform: uppercase;
-            letter-spacing: 5px;
+            color: #00ff00;
+            text-shadow: 0 0 20px #00ff00;
             margin-bottom: 10px;
-            text-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00;
-            animation: textGlow 2s infinite alternate;
-        }
-        
-        @keyframes textGlow {
-            0% {
-                text-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00;
-            }
-            100% {
-                text-shadow: 0 0 20px #00ff00, 0 0 30px #00ff00, 0 0 40px #00ff00;
-            }
         }
         
         .header p {
-            color: #0f0;
+            color: #ccc;
             font-size: 1.2em;
-            opacity: 0.8;
         }
         
-        .terminal-output {
-            background: rgba(0, 20, 0, 0.8);
-            border: 2px solid #00ff00;
-            border-radius: 0;
-            padding: 20px;
-            margin: 20px 0;
-            min-height: 60px;
-            font-family: 'Courier New', monospace;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .terminal-output::before {
-            content: '>> ';
-            color: #00ff00;
-            position: absolute;
-            left: 20px;
-            top: 20px;
-            font-weight: bold;
-        }
-        
-        #connectionStatus {
-            padding-left: 30px;
-            font-size: 1.1em;
-            animation: typing 2s steps(40);
-        }
-        
-        @keyframes typing {
-            from {
-                width: 0;
-            }
-            to {
-                width: 100%;
-            }
-        }
-        
-        .grid {
+        .status-container {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 20px;
-            margin: 30px 0;
+            margin-bottom: 30px;
         }
         
-        .panel {
-            background: rgba(0, 30, 0, 0.7);
-            border: 1px solid #00ff00;
+        .status-box {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #0088ff;
+            border-radius: 15px;
             padding: 20px;
-            position: relative;
             transition: all 0.3s;
         }
         
-        .panel:hover {
-            box-shadow: 0 0 20px #00ff00;
+        .status-box:hover {
             transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 136, 255, 0.3);
         }
         
-        .panel::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, #00ff00, transparent);
-        }
-        
-        .panel h3 {
-            color: #0f0;
+        .status-box h3 {
+            color: #0088ff;
             margin-bottom: 15px;
-            font-size: 1.3em;
-            border-bottom: 1px solid #00ff00;
-            padding-bottom: 10px;
+            font-size: 1.5em;
         }
         
-        .data-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px dashed rgba(0, 255, 0, 0.3);
-        }
-        
-        .data-label {
-            color: #8f8;
-        }
-        
-        .data-value {
-            color: #0f0;
-            font-weight: bold;
-            text-shadow: 0 0 5px #00ff00;
-        }
-        
-        .controls {
+        .stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(2, 1fr);
             gap: 15px;
-            margin: 30px 0;
         }
         
-        .btn {
-            background: rgba(0, 30, 0, 0.8);
-            border: 2px solid #00ff00;
-            color: #00ff00;
-            padding: 15px;
-            font-family: 'Courier New', monospace;
-            font-size: 1.1em;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s;
-            text-transform: uppercase;
-            letter-spacing: 2px;
+        .stat-item {
+            text-align: center;
         }
         
-        .btn:hover {
-            background: rgba(0, 255, 0, 0.2);
-            box-shadow: 0 0 20px #00ff00;
-            transform: scale(1.05);
-        }
-        
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(0, 255, 0, 0.4), transparent);
-            transition: 0.5s;
-        }
-        
-        .btn:hover::before {
-            left: 100%;
-        }
-        
-        .btn-primary {
-            background: rgba(0, 50, 0, 0.9);
+        .stat-value {
+            font-size: 2.5em;
             font-weight: bold;
+            color: #00ff00;
+            text-shadow: 0 0 10px #00ff00;
         }
         
-        .messages-container {
-            margin: 30px 0;
-            border: 2px solid #00ff00;
-            padding: 20px;
-            background: rgba(0, 10, 0, 0.9);
+        .stat-label {
+            font-size: 0.9em;
+            color: #aaa;
+        }
+        
+        .live-messages {
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #ff00ff;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
             position: relative;
         }
         
-        .messages-container::before {
-            content: 'MESSAGE_LOG';
+        .live-messages::before {
+            content: '🎯 YANGI XABARLAR';
             position: absolute;
             top: -12px;
             left: 20px;
-            background: #000;
-            padding: 0 10px;
-            color: #00ff00;
-            font-size: 0.9em;
+            background: #0f0f23;
+            padding: 0 15px;
+            color: #ff00ff;
+            font-weight: bold;
+            font-size: 1.2em;
         }
         
         .message-counter {
             position: absolute;
             top: -12px;
             right: 20px;
-            background: #000;
-            padding: 0 10px;
+            background: #0f0f23;
+            padding: 0 15px;
             color: #00ff00;
-            font-size: 0.9em;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .btn {
+            background: linear-gradient(90deg, #0088ff, #00ccff);
+            border: none;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 136, 255, 0.4);
+        }
+        
+        .btn-success {
+            background: linear-gradient(90deg, #00cc00, #00ff00);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(90deg, #ff0000, #ff5500);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(90deg, #ffaa00, #ffcc00);
+        }
+        
+        .messages-container {
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 15px;
+            padding: 20px;
+            max-height: 600px;
+            overflow-y: auto;
+            border: 2px solid #00ff00;
+        }
+        /* Custom scrollbar */
+        
+        .messages-container::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        .messages-container::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 5px;
+        }
+        
+        .messages-container::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #0088ff, #00ff00);
+            border-radius: 5px;
         }
         
         .message {
-            background: rgba(0, 20, 0, 0.7);
-            border-left: 3px solid #00ff00;
-            margin: 10px 0;
-            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 5px solid #00ff00;
+            animation: slideIn 0.5s ease;
             position: relative;
             overflow: hidden;
         }
         
-        .message::before {
-            content: '◈';
-            position: absolute;
-            left: 5px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #00ff00;
+        .message.new {
+            border-left: 5px solid #ff0000;
+            animation: newMessage 1s ease;
+        }
+        
+        @keyframes newMessage {
+            0% {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            50% {
+                transform: translateX(-10px);
+            }
+            100% {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
         .message-header {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             margin-bottom: 10px;
-            padding-left: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         .user-info {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 15px;
         }
         
         .user-avatar {
-            width: 30px;
-            height: 30px;
-            background: #000;
-            border: 1px solid #00ff00;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #0088ff, #00ff00);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #00ff00;
+            font-size: 1.5em;
             font-weight: bold;
+            color: white;
+        }
+        
+        .user-details h3 {
+            color: #00ff00;
+            font-size: 1.3em;
+            margin-bottom: 5px;
         }
         
         .user-id {
-            color: #8f8;
+            color: #aaa;
             font-size: 0.9em;
         }
         
         .message-time {
-            color: #0a0;
-            font-size: 0.9em;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 5px 15px;
+            border-radius: 20px;
+            color: #00ccff;
+            font-weight: bold;
         }
         
         .message-content {
-            padding: 10px;
+            font-size: 1.2em;
+            line-height: 1.6;
+            color: #fff;
+            margin: 15px 0;
+            padding: 15px;
             background: rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(0, 255, 0, 0.3);
-            margin-top: 10px;
-            font-size: 1.1em;
-            line-height: 1.5;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .message-meta {
+            display: flex;
+            gap: 20px;
+            font-size: 0.9em;
+            color: #aaa;
         }
         
         .empty-state {
             text-align: center;
-            padding: 40px;
-            color: #0a0;
+            padding: 60px 20px;
+            color: #aaa;
         }
         
         .empty-state h3 {
+            color: #00ff00;
             margin-bottom: 20px;
+            font-size: 1.8em;
         }
         
         .loading {
@@ -388,14 +366,14 @@
             padding: 40px;
         }
         
-        .hacker-loader {
+        .spinner {
             width: 50px;
             height: 50px;
-            margin: 0 auto 20px;
-            border: 3px solid #00ff00;
-            border-top-color: transparent;
+            border: 5px solid rgba(255, 255, 255, 0.1);
+            border-top: 5px solid #00ff00;
             border-radius: 50%;
             animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
         }
         
         @keyframes spin {
@@ -407,89 +385,64 @@
             }
         }
         
-        .alert {
+        .notification-sound {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+        /* Audio controls */
+        
+        .audio-controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
             padding: 15px;
-            margin: 10px 0;
-            border: 1px solid;
-            animation: alertPulse 1s infinite alternate;
+            border-radius: 10px;
+            border: 2px solid #0088ff;
+            z-index: 100;
         }
         
-        @keyframes alertPulse {
-            from {
-                box-shadow: 0 0 5px;
-            }
-            to {
-                box-shadow: 0 0 15px;
-            }
-        }
-        
-        .alert-success {
-            color: #0f0;
-            border-color: #0f0;
-            background: rgba(0, 50, 0, 0.3);
-        }
-        
-        .alert-error {
-            color: #f00;
-            border-color: #f00;
-            background: rgba(50, 0, 0, 0.3);
-        }
-        
-        .alert-info {
-            color: #0ff;
-            border-color: #0ff;
-            background: rgba(0, 30, 50, 0.3);
-        }
-        
-        .terminal-input {
-            width: 100%;
-            background: transparent;
-            border: none;
-            border-top: 1px solid #00ff00;
-            padding: 10px;
+        .audio-controls label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
             color: #00ff00;
-            font-family: 'Courier New', monospace;
-            margin-top: 20px;
-            outline: none;
+            cursor: pointer;
+        }
+        /* Connection indicator */
+        
+        .connection-status {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 10px 20px;
+            border-radius: 20px;
+            z-index: 100;
         }
         
-        .terminal-input::placeholder {
-            color: #0a0;
-            opacity: 0.5;
-        }
-        /* Hack effect for new messages */
-        
-        @keyframes hackEffect {
-            0% {
-                background: rgba(255, 0, 0, 0.3);
-            }
-            50% {
-                background: rgba(0, 255, 0, 0.3);
-            }
-            100% {
-                background: transparent;
-            }
-        }
-        
-        .hack-animation {
-            animation: hackEffect 1s;
-        }
-        
-        .status-indicator {
+        .status-dot {
             width: 10px;
             height: 10px;
             border-radius: 50%;
-            display: inline-block;
-            margin-right: 10px;
+            animation: blink 2s infinite;
         }
         
         .status-online {
-            background: #0f0;
-            box-shadow: 0 0 10px #0f0;
-            animation: statusPulse 2s infinite;
+            background: #00ff00;
+            box-shadow: 0 0 10px #00ff00;
         }
         
-        @keyframes statusPulse {
+        .status-offline {
+            background: #ff0000;
+            box-shadow: 0 0 10px #ff0000;
+        }
+        
+        @keyframes blink {
             0%,
             100% {
                 opacity: 1;
@@ -498,196 +451,217 @@
                 opacity: 0.5;
             }
         }
-        
-        .status-offline {
-            background: #f00;
-            box-shadow: 0 0 10px #f00;
-        }
+        /* Mobile responsive */
         
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 2em;
             }
+            .status-container {
+                grid-template-columns: 1fr;
+            }
             .controls {
                 grid-template-columns: 1fr;
             }
-            .grid {
-                grid-template-columns: 1fr;
+            .message-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            .audio-controls {
+                bottom: 10px;
+                right: 10px;
+                left: 10px;
+            }
+            .connection-status {
+                bottom: 80px;
+                left: 10px;
             }
         }
     </style>
 </head>
 
 <body>
-    <div class="matrix-bg" id="matrixBg"></div>
-    <div class="scan-line"></div>
+    <!-- Live Notification Alert -->
+    <div class="live-alert" id="liveAlert">
+        🎯 YANGI XABAR KELDI!
+    </div>
+
+    <!-- Connection Status -->
+    <div class="connection-status">
+        <div class="status-dot status-offline" id="statusDot"></div>
+        <span id="connectionText">BOTGA ULANGAN</span>
+    </div>
+
+    <!-- Audio Controls -->
+    <div class="audio-controls">
+        <label>
+            <input type="checkbox" id="soundToggle" checked>
+            🔔 Yangi xabar ovozli bildirishnoma
+        </label>
+    </div>
+
+    <!-- Notification Sound (hidden) -->
+    <audio id="notificationSound" class="notification-sound" preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-correct-answer-tone-2870.mp3" type="audio/mpeg">
+    </audio>
 
     <div class="container">
         <div class="header">
-            <h1>TELEGRAM BOT CONTROL v2.0</h1>
-            <p>SYSTEM STATUS: <span id="systemStatus">INITIALIZING...</span></p>
+            <h1>🤖 TELEGRAM BOT LIVE MONITOR</h1>
+            <p>Botga kelgan har bir xabar real-time ko'rinadi</p>
         </div>
 
-        <div class="terminal-output">
-            <div id="connectionStatus">
-                INITIALIZING SYSTEM... LOADING BOT TOKEN... CONNECTING TO TELEGRAM API...
-            </div>
-        </div>
-
-        <div id="alertContainer"></div>
-
-        <div class="grid">
-            <div class="panel">
-                <h3>🤖 BOT INFORMATION</h3>
-                <div class="data-row">
-                    <span class="data-label">STATUS:</span>
-                    <span class="data-value"><span class="status-indicator status-offline"></span>OFFLINE</span>
-                </div>
-                <div class="data-row">
-                    <span class="data-label">BOT NAME:</span>
-                    <span class="data-value" id="botName">-</span>
-                </div>
-                <div class="data-row">
-                    <span class="data-label">USERNAME:</span>
-                    <span class="data-value" id="botUsername">-</span>
-                </div>
-                <div class="data-row">
-                    <span class="data-label">MESSAGES:</span>
-                    <span class="data-value" id="totalMessages">0</span>
+        <div class="status-container">
+            <div class="status-box">
+                <h3>📊 BOT HOLATI</h3>
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalMessages">0</div>
+                        <div class="stat-label">JAMI XABARLAR</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="todayMessages">0</div>
+                        <div class="stat-label">BUGUN</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="onlineUsers">1</div>
+                        <div class="stat-label">ONLINE</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="responseTime">0ms</div>
+                        <div class="stat-label">TEZLIK</div>
+                    </div>
                 </div>
             </div>
 
-            <div class="panel">
-                <h3>⚙️ SYSTEM INFO</h3>
-                <div class="data-row">
-                    <span class="data-label">LAST UPDATE:</span>
-                    <span class="data-value" id="lastUpdate">-</span>
-                </div>
-                <div class="data-row">
-                    <span class="data-label">CONNECTION:</span>
-                    <span class="data-value" id="connectionType">DISCONNECTED</span>
-                </div>
-                <div class="data-row">
-                    <span class="data-label">AUTO REFRESH:</span>
-                    <span class="data-value" id="autoRefreshStatus">OFF</span>
+            <div class="status-box">
+                <h3>👤 BOT MA'LUMOTLARI</h3>
+                <div style="padding: 10px 0;">
+                    <div style="margin-bottom: 10px;">
+                        <div style="color: #aaa; font-size: 0.9em;">Bot Nomi:</div>
+                        <div style="color: #00ff00; font-size: 1.2em;" id="botName">Yuklanmoqda...</div>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <div style="color: #aaa; font-size: 0.9em;">Username:</div>
+                        <div style="color: #00ff00; font-size: 1.2em;" id="botUsername">@bot_username</div>
+                    </div>
+                    <div>
+                        <div style="color: #aaa; font-size: 0.9em;">So'ngi yangilanish:</div>
+                        <div style="color: #00ccff; font-size: 1.1em;" id="lastUpdate">-</div>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="controls">
-            <button class="btn btn-primary" onclick="connectBot()">
-                <span>▶️</span> CONNECT BOT
+            <button class="btn" onclick="connectBot()">
+                🔌 BOTGA ULASH
             </button>
-            <button class="btn" onclick="loadMessages()">
-                <span>🔄</span> LOAD MESSAGES
+            <button class="btn btn-success" onclick="loadMessages()">
+                📥 XABARLARNI YUKLASH
             </button>
-            <button class="btn" onclick="startAutoRefresh()">
-                <span>⚡</span> AUTO REFRESH ON
+            <button class="btn btn-warning" onclick="toggleAutoRefresh()">
+                ⚡ AVTO-YANGILASH: <span id="autoRefreshStatus">YOQILGAN</span>
             </button>
-            <button class="btn" onclick="stopAutoRefresh()">
-                <span>⏸️</span> AUTO REFRESH OFF
-            </button>
-            <button class="btn" onclick="clearMessages()">
-                <span>🗑️</span> CLEAR LOGS
+            <button class="btn btn-danger" onclick="clearMessages()">
+                🗑️ XABARLARNI TOZALASH
             </button>
         </div>
 
-        <div class="messages-container">
+        <div class="live-messages">
             <div class="message-counter">
-                MESSAGES: <span id="messageCount">0</span>
+                XABARLAR: <span id="messageCount">0</span>
             </div>
 
             <div id="loadingState" class="loading" style="display: none;">
-                <div class="hacker-loader"></div>
-                <p>LOADING MESSAGE LOGS...</p>
+                <div class="spinner"></div>
+                <p>Xabarlar yuklanmoqda...</p>
             </div>
 
             <div id="emptyState" class="empty-state" style="display: none;">
-                <h3>NO MESSAGES FOUND</h3>
-                <p>WAITING FOR COMMUNICATION...</p>
+                <h3>Hozircha xabarlar yo'q</h3>
+                <p>Botga xabar yuboring va bu yerda ko'ring</p>
             </div>
 
             <div id="messagesList"></div>
         </div>
-
-        <input type="text" class="terminal-input" placeholder="Enter command (type 'help' for commands list)" onkeypress="handleCommand(event)" id="commandInput">
     </div>
 
     <script>
-        // ====== MATRIX BACKGROUND EFFECT ======
-        function createMatrixEffect() {
-            const matrixBg = document.getElementById('matrixBg');
-            const chars = '01ABCDEFGHIJKLMNOPQRSTUVWXYZ$%&@#';
-
-            for (let i = 0; i < 100; i++) {
-                const char = document.createElement('div');
-                char.className = 'matrix-char';
-                char.textContent = chars[Math.floor(Math.random() * chars.length)];
-                char.style.left = Math.random() * 100 + 'vw';
-                char.style.animationDuration = (Math.random() * 5 + 3) + 's';
-                char.style.animationDelay = Math.random() * 5 + 's';
-                matrixBg.appendChild(char);
-            }
-        }
-
         // ====== KONFIGURATSIYA ======
         const BOT_TOKEN = "7692859653:AAE_8ddxOhqdjiqV8nJMQCp1ud46jvSGlDE";
-        const PROXY_URL = "https://api.allorigins.win/raw?url=";
-        const TELEGRAM_API = PROXY_URL + "https://api.telegram.org/bot" + BOT_TOKEN;
+
+        // Proxy serverlar ro'yxati (agar biri ishlamasa, boshqasiga o'tadi)
+        const PROXY_SERVERS = [
+            "https://api.allorigins.win/raw?url=",
+            "https://corsproxy.io/?",
+            "https://api.codetabs.com/v1/proxy/?quest="
+        ];
+
+        let currentProxyIndex = 0;
+        let TELEGRAM_API = PROXY_SERVERS[0] + "https://api.telegram.org/bot" + BOT_TOKEN;
 
         // ====== O'ZGARUVCHILAR ======
         let messages = [];
         let autoRefreshInterval = null;
         let botInfo = null;
         let lastUpdateId = 0;
+        let isAutoRefreshOn = true;
+        let todayMessagesCount = 0;
+        let connectionStartTime = Date.now();
 
-        // ====== TERMINAL EFFECTS ======
-        function typeEffect(element, text, speed = 50) {
-            element.innerHTML = '';
-            let i = 0;
+        // ====== DOM ELEMENTLARI ======
+        const liveAlert = document.getElementById('liveAlert');
+        const notificationSound = document.getElementById('notificationSound');
+        const soundToggle = document.getElementById('soundToggle');
+        const statusDot = document.getElementById('statusDot');
+        const connectionText = document.getElementById('connectionText');
 
-            function typeWriter() {
-                if (i < text.length) {
-                    element.innerHTML += text.charAt(i);
-                    i++;
-                    setTimeout(typeWriter, speed);
-                }
-            }
-            typeWriter();
+        // ====== FUNKSIYALAR ======
+
+        // Proxy serverni almashtirish
+        function switchProxy() {
+            currentProxyIndex = (currentProxyIndex + 1) % PROXY_SERVERS.length;
+            TELEGRAM_API = PROXY_SERVERS[currentProxyIndex] + "https://api.telegram.org/bot" + BOT_TOKEN;
+            console.log("Proxy server almashtirildi:", PROXY_SERVERS[currentProxyIndex]);
         }
 
-        function showAlert(message, type = 'info') {
-            const alertContainer = document.getElementById('alertContainer');
-            const alert = document.createElement('div');
-            alert.className = 'alert alert-' + type;
-            alert.innerHTML = message;
-            alertContainer.appendChild(alert);
+        // Live bildirishnoma ko'rsatish
+        function showLiveNotification(userName, message) {
+            liveAlert.innerHTML = `🎯 <strong>${userName}</strong>: ${message.substring(0, 50)}${message.length > 50 ? '...' : ''}`;
+            liveAlert.style.display = 'block';
 
+            // Ovozli bildirishnoma
+            if (soundToggle.checked) {
+                notificationSound.currentTime = 0;
+                notificationSound.play().catch(e => console.log("Ovoz chalishda xatolik:", e));
+            }
+
+            // 5 soniyadan so'ng yashirish
             setTimeout(() => {
-                alert.style.opacity = '0';
-                setTimeout(() => alert.remove(), 500);
-            }, 3000);
+                liveAlert.style.display = 'none';
+            }, 5000);
         }
 
-        function updateStatus(text, isOnline = false) {
-            const statusElement = document.getElementById('systemStatus');
-            const statusIndicator = document.querySelector('.status-indicator');
-
-            statusElement.textContent = text;
-            if (isOnline) {
-                statusElement.style.color = '#0f0';
-                statusIndicator.className = 'status-indicator status-online';
+        // Holatni yangilash
+        function updateStatus(isConnected) {
+            if (isConnected) {
+                statusDot.className = 'status-dot status-online';
+                connectionText.textContent = 'BOTGA ULANGAN';
+                connectionText.style.color = '#00ff00';
             } else {
-                statusElement.style.color = '#f00';
-                statusIndicator.className = 'status-indicator status-offline';
+                statusDot.className = 'status-dot status-offline';
+                connectionText.textContent = 'BOTGA ULANMAGAN';
+                connectionText.style.color = '#ff0000';
             }
         }
 
-        // ====== BOT FUNCTIONS ======
+        // Bot ma'lumotlarini olish
         async function getBotInfo() {
             try {
-                typeEffect(document.getElementById('connectionStatus'),
-                    "> CONNECTING TO TELEGRAM API...\n> AUTHENTICATING TOKEN...\n> ESTABLISHING CONNECTION...");
+                updateStatus(false);
+                const startTime = Date.now();
 
                 const response = await fetch(TELEGRAM_API + '/getMe');
                 const data = await response.json();
@@ -695,80 +669,163 @@
                 if (data.ok) {
                     botInfo = data.result;
 
-                    // Update UI
+                    // UI ni yangilash
                     document.getElementById('botName').textContent = botInfo.first_name;
                     document.getElementById('botUsername').textContent = '@' + botInfo.username;
-                    document.getElementById('connectionType').textContent = 'CONNECTED';
-                    document.getElementById('connectionType').style.color = '#0f0';
 
-                    typeEffect(document.getElementById('connectionStatus'),
-                        `> CONNECTION ESTABLISHED\n> BOT IDENTIFIED: ${botInfo.first_name}\n> USERNAME: @${botInfo.username}\n> STATUS: ONLINE`);
+                    // Tezlikni hisoblash
+                    const responseTime = Date.now() - startTime;
+                    document.getElementById('responseTime').textContent = responseTime + 'ms';
 
-                    showAlert(`> SYSTEM: ${botInfo.first_name} BOT CONNECTED SUCCESSFULLY`, 'success');
-                    updateStatus('ONLINE', true);
-
+                    updateStatus(true);
+                    showAlert(`✅ ${botInfo.first_name} botiga ulandi!`, 'success');
                     return true;
                 } else {
-                    throw new Error(data.description);
+                    throw new Error(data.description || 'Noma\'lum xatolik');
                 }
             } catch (error) {
-                typeEffect(document.getElementById('connectionStatus'),
-                    `> CONNECTION FAILED\n> ERROR: ${error.message}\n> RETRYING...`);
-                showAlert(`> SYSTEM ERROR: ${error.message}`, 'error');
-                updateStatus('OFFLINE', false);
+                console.error('Bot ma\'lumotlarini olishda xatolik:', error);
+                updateStatus(false);
+                showAlert(`❌ Xatolik: ${error.message}`, 'error');
+
+                // Proxy server almashtirish
+                setTimeout(switchProxy, 1000);
                 return false;
             }
         }
 
+        // Yangi xabarlarni tekshirish
+        async function checkNewMessages() {
+            try {
+                const response = await fetch(TELEGRAM_API + '/getUpdates?offset=' + (lastUpdateId + 1));
+                const data = await response.json();
+
+                if (data.ok && data.result.length > 0) {
+                    const newMessages = [];
+                    let hasNewMessage = false;
+
+                    data.result.forEach(update => {
+                        if (update.message && update.message.text) {
+                            const message = {
+                                id: update.update_id,
+                                message_id: update.message.message_id,
+                                user_id: update.message.from.id,
+                                user_name: update.message.from.first_name || 'Foydalanuvchi',
+                                username: update.message.from.username || "noma'lum",
+                                text: update.message.text,
+                                date: new Date(update.message.date * 1000),
+                                chat_id: update.message.chat.id,
+                                is_new: true
+                            };
+
+                            newMessages.push(message);
+                            lastUpdateId = update.update_id;
+                            hasNewMessage = true;
+
+                            // Bugungi xabarlarni hisoblash
+                            const today = new Date();
+                            const messageDate = new Date(update.message.date * 1000);
+                            if (messageDate.toDateString() === today.toDateString()) {
+                                todayMessagesCount++;
+                            }
+                        }
+                    });
+
+                    if (hasNewMessage) {
+                        // Yangi xabarlarni boshiga qo'shish
+                        messages.unshift(...newMessages);
+
+                        // Statistikani yangilash
+                        document.getElementById('totalMessages').textContent = messages.length;
+                        document.getElementById('todayMessages').textContent = todayMessagesCount;
+                        document.getElementById('messageCount').textContent = messages.length;
+
+                        // Xabarlarni ko'rsatish
+                        displayMessages();
+
+                        // Har bir yangi xabar uchun bildirishnoma
+                        newMessages.forEach(msg => {
+                            showLiveNotification(msg.user_name, msg.text);
+                        });
+
+                        // So'ngi yangilanish vaqtini yangilash
+                        document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('uz-UZ');
+
+                        return true;
+                    }
+                }
+                return false;
+            } catch (error) {
+                console.error('Yangi xabarlarni tekshirishda xatolik:', error);
+                return false;
+            }
+        }
+
+        // Barcha xabarlarni yuklash
         async function loadMessages() {
             document.getElementById('loadingState').style.display = 'block';
             document.getElementById('emptyState').style.display = 'none';
 
             try {
-                const response = await fetch(TELEGRAM_API + '/getUpdates?limit=50');
+                const response = await fetch(TELEGRAM_API + '/getUpdates?limit=100');
                 const data = await response.json();
 
                 if (data.ok) {
                     messages = [];
+                    todayMessagesCount = 0;
+                    const today = new Date();
+
                     data.result.forEach(update => {
                         if (update.message && update.message.text && update.message.from) {
                             const message = {
                                 id: update.update_id,
                                 message_id: update.message.message_id,
                                 user_id: update.message.from.id,
-                                user_name: update.message.from.first_name || 'UNKNOWN_USER',
-                                username: update.message.from.username || "N/A",
+                                user_name: update.message.from.first_name || 'Foydalanuvchi',
+                                username: update.message.from.username || "noma'lum",
                                 text: update.message.text,
                                 date: new Date(update.message.date * 1000),
-                                chat_id: update.message.chat.id
+                                chat_id: update.message.chat.id,
+                                is_new: false
                             };
                             messages.push(message);
 
                             if (update.update_id > lastUpdateId) {
                                 lastUpdateId = update.update_id;
                             }
+
+                            // Bugungi xabarlarni hisoblash
+                            const messageDate = new Date(update.message.date * 1000);
+                            if (messageDate.toDateString() === today.toDateString()) {
+                                todayMessagesCount++;
+                            }
                         }
                     });
 
+                    // Xabarlarni teskari tartibda (yangidan eski)
                     messages.reverse();
-                    document.getElementById('totalMessages').textContent = messages.length + ' MSGS';
+
+                    // Statistikani yangilash
+                    document.getElementById('totalMessages').textContent = messages.length;
+                    document.getElementById('todayMessages').textContent = todayMessagesCount;
                     document.getElementById('messageCount').textContent = messages.length;
-                    document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+                    document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('uz-UZ');
 
                     if (messages.length === 0) {
                         document.getElementById('emptyState').style.display = 'block';
                     }
 
                     displayMessages();
-                    showAlert(`> SYSTEM: LOADED ${messages.length} MESSAGES`, 'success');
+                    showAlert(`📥 ${messages.length} ta xabar yuklandi`, 'info');
                 }
             } catch (error) {
-                showAlert(`> ERROR: ${error.message}`, 'error');
+                showAlert(`❌ Xabarlarni yuklashda xatolik: ${error.message}`, 'error');
             } finally {
                 document.getElementById('loadingState').style.display = 'none';
             }
         }
 
+        // Xabarlarni ekranga chiqarish
         function displayMessages() {
             const container = document.getElementById('messagesList');
             const emptyState = document.getElementById('emptyState');
@@ -782,161 +839,158 @@
             emptyState.style.display = 'none';
 
             let html = '';
-            messages.forEach((msg) => {
-                const time = msg.date.toLocaleTimeString();
-                const date = msg.date.toLocaleDateString();
+            messages.forEach((msg, index) => {
+                const time = msg.date.toLocaleTimeString('uz-UZ');
+                const date = msg.date.toLocaleDateString('uz-UZ');
                 const userInitial = msg.user_name.charAt(0).toUpperCase();
+                const messageClass = msg.is_new ? 'message new' : 'message';
 
                 html += `
-                    <div class="message" id="message-${msg.id}">
+                    <div class="${messageClass}" id="message-${msg.id}">
                         <div class="message-header">
                             <div class="user-info">
                                 <div class="user-avatar">${userInitial}</div>
-                                <div>
-                                    <div>${msg.user_name}</div>
-                                    <div class="user-id">ID: ${msg.user_id}${msg.username !== 'N/A' ? ' (@' + msg.username + ')' : ''}</div>
+                                <div class="user-details">
+                                    <h3>${msg.user_name}</h3>
+                                    <div class="user-id">ID: ${msg.user_id}${msg.username !== "noma'lum" ? ' (@' + msg.username + ')' : ''}</div>
                                 </div>
                             </div>
                             <div class="message-time">${date} ${time}</div>
                         </div>
-                        <div class="message-content">${msg.text}</div>
+                        <div class="message-content">
+                            ${escapeHtml(msg.text)}
+                        </div>
+                        <div class="message-meta">
+                            <div>📝 Xabar ID: ${msg.message_id}</div>
+                            <div>💬 Chat ID: ${msg.chat_id}</div>
+                        </div>
                     </div>
                 `;
+
+                // Yangi xabar bo'lsa, keyingi safar yangi emasligini belgilash
+                if (msg.is_new) {
+                    msg.is_new = false;
+                }
             });
 
             container.innerHTML = html;
         }
 
+        // Alert ko'rsatish
+        function showAlert(message, type) {
+            const alert = document.createElement('div');
+            alert.className = 'alert';
+            alert.innerHTML = message;
+            alert.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: ${type === 'error' ? '#ff0000' : type === 'success' ? '#00ff00' : '#0088ff'};
+                color: white;
+                padding: 15px 25px;
+                border-radius: 10px;
+                z-index: 1000;
+                animation: slideDown 0.3s ease;
+            `;
+
+            document.body.appendChild(alert);
+
+            setTimeout(() => {
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 300);
+            }, 3000);
+        }
+
+        // Botga ulanish
         async function connectBot() {
             const connected = await getBotInfo();
             if (connected) {
                 await loadMessages();
-                startAutoRefresh();
+                if (isAutoRefreshOn) {
+                    startAutoRefresh();
+                }
             }
         }
 
+        // Avtomatik yangilashni yoqish
         function startAutoRefresh() {
             if (autoRefreshInterval) {
                 clearInterval(autoRefreshInterval);
             }
 
             autoRefreshInterval = setInterval(async() => {
-                try {
-                    const response = await fetch(TELEGRAM_API + '/getUpdates?offset=' + (lastUpdateId + 1));
-                    const data = await response.json();
+                await checkNewMessages();
+                document.getElementById('onlineUsers').textContent = Math.floor(Math.random() * 10) + 1;
+            }, 3000); // Har 3 soniyada tekshiradi
 
-                    if (data.ok && data.result.length > 0) {
-                        const newMessages = [];
-                        data.result.forEach(update => {
-                            if (update.message && update.message.text) {
-                                const message = {
-                                    id: update.update_id,
-                                    message_id: update.message.message_id,
-                                    user_id: update.message.from.id,
-                                    user_name: update.message.from.first_name || 'UNKNOWN_USER',
-                                    username: update.message.from.username,
-                                    text: update.message.text,
-                                    date: new Date(update.message.date * 1000),
-                                    chat_id: update.message.chat.id
-                                };
-                                newMessages.push(message);
-                                lastUpdateId = update.update_id;
-                            }
-                        });
-
-                        if (newMessages.length > 0) {
-                            messages.unshift(...newMessages);
-                            displayMessages();
-
-                            // Hack effect for new messages
-                            newMessages.forEach((msg) => {
-                                const element = document.getElementById('message-' + msg.id);
-                                if (element) {
-                                    element.classList.add('hack-animation');
-                                    setTimeout(() => element.classList.remove('hack-animation'), 1000);
-                                }
-                            });
-
-                            showAlert(`> SYSTEM: ${newMessages.length} NEW MESSAGES RECEIVED`, 'info');
-                        }
-                    }
-                } catch (error) {
-                    console.error('Auto-refresh error:', error);
-                }
-            }, 5000);
-
-            document.getElementById('autoRefreshStatus').textContent = 'ON (5s)';
-            showAlert('> SYSTEM: AUTO REFRESH ACTIVATED', 'success');
+            isAutoRefreshOn = true;
+            document.getElementById('autoRefreshStatus').textContent = 'YOQILGAN';
+            document.getElementById('autoRefreshStatus').style.color = '#00ff00';
         }
 
+        // Avtomatik yangilashni to'xtatish
         function stopAutoRefresh() {
             if (autoRefreshInterval) {
                 clearInterval(autoRefreshInterval);
                 autoRefreshInterval = null;
-                document.getElementById('autoRefreshStatus').textContent = 'OFF';
-                showAlert('> SYSTEM: AUTO REFRESH DEACTIVATED', 'info');
+                isAutoRefreshOn = false;
+                document.getElementById('autoRefreshStatus').textContent = 'OʻCHIRILGAN';
+                document.getElementById('autoRefreshStatus').style.color = '#ff0000';
             }
         }
 
+        // Avtomatik yangilashni yoqish/o'chirish
+        function toggleAutoRefresh() {
+            if (isAutoRefreshOn) {
+                stopAutoRefresh();
+                showAlert('⚡ Avtomatik yangilash o\'chirildi', 'info');
+            } else {
+                startAutoRefresh();
+                showAlert('⚡ Avtomatik yangilash yoqildi', 'success');
+            }
+        }
+
+        // Xabarlarni tozalash
         function clearMessages() {
-            if (confirm('DELETE ALL MESSAGE LOGS?')) {
+            if (confirm("Barcha xabarlarni o'chirishni istaysizmi?")) {
                 messages = [];
+                todayMessagesCount = 0;
                 displayMessages();
-                showAlert('> SYSTEM: ALL LOGS CLEARED', 'info');
+                document.getElementById('totalMessages').textContent = '0';
+                document.getElementById('todayMessages').textContent = '0';
+                document.getElementById('messageCount').textContent = '0';
+                showAlert('🗑️ Barcha xabarlar tozalandi', 'info');
             }
         }
 
-        function handleCommand(event) {
-            if (event.key === 'Enter') {
-                const input = document.getElementById('commandInput');
-                const command = input.value.toLowerCase().trim();
-                input.value = '';
+        // HTML encoding
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
 
-                const status = document.getElementById('connectionStatus');
-
-                switch (command) {
-                    case 'help':
-                        typeEffect(status, "> AVAILABLE COMMANDS:\n> help - Show this menu\n> status - Check bot status\n> clear - Clear logs\n> refresh - Load messages\n> connect - Connect bot\n> disconnect - Disconnect");
-                        break;
-                    case 'status':
-                        typeEffect(status, `> BOT STATUS: ${botInfo ? 'ONLINE' : 'OFFLINE'}\n> MESSAGES: ${messages.length}\n> LAST UPDATE: ${new Date().toLocaleTimeString()}`);
-                        break;
-                    case 'clear':
-                        clearMessages();
-                        break;
-                    case 'refresh':
-                        loadMessages();
-                        break;
-                    case 'connect':
-                        connectBot();
-                        break;
-                    case 'disconnect':
-                        stopAutoRefresh();
-                        typeEffect(status, "> DISCONNECTED FROM BOT");
-                        updateStatus('OFFLINE', false);
-                        break;
-                    default:
-                        typeEffect(status, `> UNKNOWN COMMAND: ${command}\n> Type 'help' for commands list`);
+        // ====== DASTLABKI ISHGA TUSHIRISH ======
+        document.addEventListener('DOMContentLoaded', async() => {
+            // Avtomatik botga ulanish
+            setTimeout(async() => {
+                const connected = await getBotInfo();
+                if (connected) {
+                    await loadMessages();
+                    startAutoRefresh();
                 }
-            }
-        }
-
-        // ====== INITIALIZATION ======
-        document.addEventListener('DOMContentLoaded', () => {
-            createMatrixEffect();
-
-            // Terminal startup sequence
-            setTimeout(() => {
-                typeEffect(document.getElementById('connectionStatus'),
-                    "> SYSTEM BOOTING...\n> LOADING MODULES...\n> INITIALIZING INTERFACE...\n> READY FOR COMMANDS");
-
-                updateStatus('STANDBY', false);
-
-                // Auto connect after 2 seconds
-                setTimeout(() => {
-                    connectBot();
-                }, 2000);
             }, 1000);
+
+            // Har 10 soniyada connection tekshirish
+            setInterval(async() => {
+                if (botInfo) {
+                    const connected = await getBotInfo();
+                    if (!connected) {
+                        showAlert('❌ BOTGA ULASH MUAMMOSI! QAYTA ULASH...', 'error');
+                    }
+                }
+            }, 10000);
         });
     </script>
 </body>
